@@ -1,9 +1,26 @@
 "use client";
 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { ChevronDownIcon, HomeIcon } from "lucide-react";
+import {
+  ChevronDownIcon,
+  ChevronRightIcon,
+  DotIcon,
+  HomeIcon,
+} from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { KeyboardEvent, useEffect, useState } from "react";
+
+interface Post {
+  id: string;
+  title: string;
+}
+
+interface Category {
+  name: string;
+  subCategories: Category[];
+  posts: Post[];
+}
 
 const tocItems = [
   { id: "section-1", title: "Section 1" },
@@ -11,13 +28,140 @@ const tocItems = [
   { id: "section-3", title: "Section 3" },
 ];
 
-const recentPosts = [
-  { id: "post-1", title: "Post 1" },
-  { id: "post-2", title: "Post 2" },
-  { id: "post-3", title: "Post 3" },
-  { id: "post-4", title: "Post 4" },
-  { id: "post-5", title: "Post 5" },
+const categories: Category[] = [
+  {
+    name: "Default",
+    subCategories: [
+      {
+        name: "programming",
+        subCategories: [],
+        posts: [{ id: "programming-post-1", title: "Programming" }],
+      },
+      {
+        name: "AI",
+        subCategories: [
+          {
+            name: "deeper one",
+            subCategories: [],
+            posts: [{ id: "deep-post-1", title: "Deep" }],
+          },
+        ],
+        posts: [{ id: "ai-post-1", title: "AI" }],
+      },
+    ],
+    posts: [
+      { id: "post-1", title: "Root Post 1" },
+      { id: "post-2", title: "Root Post 2" },
+      { id: "post-3", title: "Root Post 3" },
+      { id: "post-4", title: "Root Post 4" },
+      { id: "post-5", title: "Root Post 5" },
+    ],
+  },
+  {
+    name: "Date",
+    subCategories: [],
+    posts: [
+      { id: "post-1", title: "Root Post 1" },
+      { id: "post-2", title: "Root Post 2" },
+      { id: "post-3", title: "Root Post 3" },
+      { id: "post-4", title: "Root Post 4" },
+      { id: "post-5", title: "Root Post 5" },
+      { id: "programming-post-1", title: "Programming" },
+      { id: "ai-post-1", title: "AI" },
+      { id: "deep-post-1", title: "Deep" },
+    ],
+  },
+  {
+    name: "Test",
+    subCategories: [],
+    posts: [],
+  },
 ];
+
+const PostTree = ({
+  category,
+  isRoot,
+}: {
+  category: Category;
+  isRoot?: boolean;
+}) => {
+  const [isExpanded, setIsExpanded] = useState(isRoot);
+
+  const toggleExpanded = () => setIsExpanded(!isExpanded);
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      toggleExpanded();
+    }
+  };
+
+  const handleCategoryClick = () => {
+    // Here you can add logic to navigate to the category page
+    console.log(`Navigating to category: ${category.name}`);
+  };
+
+  return (
+    <div>
+      {!isRoot && (
+        <div className="flex py-1 items-center">
+          <div
+            className="cursor-pointer p-1"
+            onClick={toggleExpanded}
+            onKeyDown={handleKeyDown}
+            role="button"
+            tabIndex={0}
+            aria-expanded={isExpanded}
+            aria-label={`Expand ${category.name} category`}
+          >
+            <ChevronRightIcon
+              className={`h-4 w-4 transition-transform ${
+                isExpanded ? "transform rotate-90" : ""
+              }`}
+              aria-hidden="true"
+            />
+          </div>
+          <div
+            className="ml-1 cursor-pointer flex-grow"
+            onClick={handleCategoryClick}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleCategoryClick();
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label={`Go to ${category.name} category`}
+          >
+            {category.name}
+          </div>
+        </div>
+      )}
+      {(isExpanded || isRoot) && (
+        <div
+          className={isRoot ? "" : "ml-4"}
+          role="group"
+          aria-label={`${category.name} subcategories and posts`}
+        >
+          {category.subCategories.map((subCategory) => (
+            <PostTree key={subCategory.name} category={subCategory} />
+          ))}
+          {category.posts.map((post) => (
+            <Link
+              key={post.id}
+              href={`/${post.id}`}
+              className="flex py-1 text-muted-foreground hover:text-foreground items-center"
+            >
+              <DotIcon />
+              {post.title}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function BlogPost() {
   const [activeSection, setActiveSection] = useState("section-1");
@@ -49,7 +193,7 @@ export default function BlogPost() {
     });
 
     return () => observer.disconnect();
-  }, [tocItems]);
+  }, []);
 
   useEffect(() => {
     if (expanded) {
@@ -103,33 +247,49 @@ export default function BlogPost() {
             <div
               className="py-2 flex items-center justify-between cursor-pointer"
               onClick={togglePostList}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  togglePostList();
+                }
+              }}
+              aria-expanded={expanded === "postList"}
+              aria-controls="mobile-post-list"
             >
-              <span className="font-medium">Recent Posts</span>
+              <span className="font-medium">Posts</span>
               <ChevronDownIcon
                 className={`h-4 w-4 transition-transform ${
                   expanded === "postList" ? "transform rotate-180" : ""
                 }`}
+                aria-hidden="true"
               />
             </div>
           </div>
         </div>
 
-        {/* Mobile Post Lis expanded */}
+        {/* Mobile Post List expanded */}
         {expanded === "postList" && (
-          <div className="md:hidden border-b flex-1 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 overflow-y-auto">
+          <div
+            id="mobile-post-list"
+            className="md:hidden border-b flex-1 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 overflow-y-auto"
+          >
             <div className="container mx-auto px-4 py-2">
-              <nav className="space-y-1">
-                {recentPosts.map((post) => (
-                  <Link
-                    key={post.id}
-                    href={`/${post.id}`}
-                    className="block py-1 text-muted-foreground hover:text-foreground"
-                    onClick={togglePostList}
-                  >
-                    {post.title}
-                  </Link>
+              <Tabs defaultValue={categories[0].name}>
+                <TabsList>
+                  {categories.map((category) => (
+                    <TabsTrigger key={category.name} value={category.name}>
+                      {category.name}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                {categories.map((category) => (
+                  <TabsContent key={category.name} value={category.name}>
+                    <PostTree category={category} isRoot />
+                  </TabsContent>
                 ))}
-              </nav>
+              </Tabs>
             </div>
           </div>
         )}
@@ -140,6 +300,16 @@ export default function BlogPost() {
             <div
               className="py-2 flex items-center justify-between cursor-pointer"
               onClick={toggleToc}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  toggleToc();
+                }
+              }}
+              aria-expanded={expanded === "toc"}
+              aria-controls="mobile-toc"
             >
               <span className="font-medium">
                 {tocItems.find((item) => item.id === activeSection)?.title}
@@ -148,6 +318,7 @@ export default function BlogPost() {
                 className={`h-4 w-4 transition-transform ${
                   expanded === "toc" ? "transform rotate-180" : ""
                 }`}
+                aria-hidden="true"
               />
             </div>
           </div>
@@ -155,7 +326,10 @@ export default function BlogPost() {
 
         {/* Mobile and Tablet TOC expanded */}
         {expanded === "toc" && (
-          <div className="lg:hidden flex-1 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 overflow-y-auto">
+          <div
+            id="mobile-toc"
+            className="lg:hidden flex-1 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 overflow-y-auto"
+          >
             <div className="container mx-auto px-4 py-4">
               <nav className="space-y-2">
                 {tocItems.map((item) => (
@@ -180,18 +354,21 @@ export default function BlogPost() {
         {/* Sidebar for larger screens */}
         <aside className="hidden md:block sticky top-14 z-30 h-[calc(100vh-3.5rem)] w-full shrink-0 overflow-y-auto border-r">
           <div className="py-6 pr-6 lg:py-8">
-            <h2 className="mb-4 text-lg font-semibold">Recent Posts</h2>
-            <nav className="flex flex-col space-y-2">
-              {recentPosts.map((post) => (
-                <Link
-                  key={post.id}
-                  href={`/${post.id}`}
-                  className="hover:underline"
-                >
-                  {post.title}
-                </Link>
+            <h2 className="mb-4 text-lg font-semibold">Posts</h2>
+            <Tabs defaultValue={categories[0].name}>
+              <TabsList>
+                {categories.map((category) => (
+                  <TabsTrigger key={category.name} value={category.name}>
+                    {category.name}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              {categories.map((category) => (
+                <TabsContent key={category.name} value={category.name}>
+                  <PostTree category={category} isRoot />
+                </TabsContent>
               ))}
-            </nav>
+            </Tabs>
           </div>
         </aside>
 
