@@ -1,24 +1,29 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import { ChevronDownIcon, HomeIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function BlogPost() {
   const [activeSection, setActiveSection] = useState("section-1");
-  const [isTocExpanded, setIsTocExpanded] = useState(false);
-  const [isPostListOpen, setIsPostListOpen] = useState(false);
+  const [expanded, setExpanded] = useState<undefined | "postList" | "toc">();
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
-        });
+        const visibleSections = entries
+          .filter((entry) => entry.isIntersecting)
+          .map((entry) => entry.target.id);
+
+        if (visibleSections.length > 0) {
+          setActiveSection(visibleSections[0]);
+        }
       },
-      { threshold: 0.5 }
+      {
+        threshold: 0.1,
+        rootMargin: "-100px 0px -66%", // Ignore top 100px (header) and bottom 66%
+      }
     );
 
     document.querySelectorAll("h2[id]").forEach((section) => {
@@ -28,6 +33,18 @@ export default function BlogPost() {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    if (expanded) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [expanded]);
+
   const tocItems = [
     { id: "section-1", title: "Section 1" },
     { id: "section-2", title: "Section 2" },
@@ -35,12 +52,23 @@ export default function BlogPost() {
   ];
 
   const recentPosts = [
+    { id: "post-0", title: "Blog Post Title" },
     { id: "post-1", title: "Post 1" },
     { id: "post-2", title: "Post 2" },
     { id: "post-3", title: "Post 3" },
     { id: "post-4", title: "Post 4" },
     { id: "post-5", title: "Post 5" },
   ];
+
+  const togglePostList = () => {
+    setExpanded((expanded) =>
+      expanded === "postList" ? undefined : "postList"
+    );
+  };
+
+  const toggleToc = () => {
+    setExpanded((expanded) => (expanded === "toc" ? undefined : "toc"));
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -60,74 +88,89 @@ export default function BlogPost() {
       </header>
 
       {/* Sticky Mobile and Tablet Post List and TOC Container */}
-      <div className="lg:hidden sticky top-14 z-40 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        {/* Mobile Post List */}
-        <div className="md:hidden border-b">
+      <div
+        className={cn(
+          "lg:hidden sticky flex flex-col top-14 z-40 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
+          expanded && "h-[calc(100vh-3.5rem)]"
+        )}
+      >
+        {/* Mobile Post List collapsed */}
+        <div className="md:hidden border-b h-10">
           <div className="container mx-auto px-4">
             <div
               className="py-2 flex items-center justify-between cursor-pointer"
-              onClick={() => setIsPostListOpen(!isPostListOpen)}
+              onClick={togglePostList}
             >
               <span className="font-medium">Recent Posts</span>
               <ChevronDownIcon
                 className={`h-4 w-4 transition-transform ${
-                  isPostListOpen ? "transform rotate-180" : ""
+                  expanded === "postList" ? "transform rotate-180" : ""
                 }`}
               />
             </div>
-            {isPostListOpen && (
-              <nav className="py-2 space-y-1">
+          </div>
+        </div>
+
+        {/* Mobile Post Lis expanded */}
+        {expanded === "postList" && (
+          <div className="md:hidden border-b flex-1 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 overflow-y-auto">
+            <div className="container mx-auto px-4 py-2">
+              <nav className="space-y-1">
                 {recentPosts.map((post) => (
                   <Link
                     key={post.id}
                     href={`/${post.id}`}
                     className="block py-1 text-muted-foreground hover:text-foreground"
-                    onClick={() => setIsPostListOpen(false)}
+                    onClick={togglePostList}
                   >
                     {post.title}
                   </Link>
                 ))}
               </nav>
-            )}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Mobile and Tablet TOC */}
-        <div className="border-b">
+        {/* Mobile and Tablet TOC collapsed */}
+        <div className="border-b h-10">
           <div className="container mx-auto px-4">
             <div
               className="py-2 flex items-center justify-between cursor-pointer"
-              onClick={() => setIsTocExpanded(!isTocExpanded)}
+              onClick={toggleToc}
             >
               <span className="font-medium">
                 {tocItems.find((item) => item.id === activeSection)?.title}
               </span>
               <ChevronDownIcon
                 className={`h-4 w-4 transition-transform ${
-                  isTocExpanded ? "transform rotate-180" : ""
+                  expanded === "toc" ? "transform rotate-180" : ""
                 }`}
               />
             </div>
-            {isTocExpanded && (
-              <nav className="py-2 space-y-1">
+          </div>
+        </div>
+
+        {/* Mobile and Tablet TOC expanded */}
+        {expanded === "toc" && (
+          <div className="lg:hidden flex-1 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 overflow-y-auto">
+            <div className="container mx-auto px-4 py-4">
+              <nav className="space-y-2">
                 {tocItems.map((item) => (
                   <Link
                     key={item.id}
                     href={`#${item.id}`}
-                    className={`block py-1 ${
-                      activeSection === item.id
-                        ? "font-semibold"
-                        : "text-muted-foreground"
+                    className={`block py-2 ${
+                      activeSection === item.id ? "font-semibold" : ""
                     }`}
-                    onClick={() => setIsTocExpanded(false)}
+                    onClick={toggleToc}
                   >
                     {item.title}
                   </Link>
                 ))}
               </nav>
-            )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="container mx-auto px-4 flex-1 items-start md:grid md:grid-cols-[220px_minmax(0,1fr)] md:gap-6 lg:grid-cols-[240px_minmax(0,1fr)_200px] lg:gap-10">
@@ -206,24 +249,22 @@ export default function BlogPost() {
         </main>
 
         {/* Table of Contents for larger screens */}
-        <aside className="hidden text-sm lg:block">
-          <div className="sticky top-16 -mt-10 max-h-[calc(var(--vh)-4rem)] overflow-y-auto pt-10">
-            <div className="py-6 pl-6">
-              <h2 className="mb-4 text-lg font-semibold">Table of Contents</h2>
-              <nav className="space-y-2">
-                {tocItems.map((item) => (
-                  <Link
-                    key={item.id}
-                    href={`#${item.id}`}
-                    className={`block hover:underline ${
-                      activeSection === item.id ? "font-semibold" : ""
-                    }`}
-                  >
-                    {item.title}
-                  </Link>
-                ))}
-              </nav>
-            </div>
+        <aside className="hidden lg:block sticky top-14 self-start h-[calc(100vh-3.5rem)] overflow-y-auto">
+          <div className="py-6 pl-6">
+            <h2 className="mb-4 text-lg font-semibold">Table of Contents</h2>
+            <nav className="space-y-2">
+              {tocItems.map((item) => (
+                <Link
+                  key={item.id}
+                  href={`#${item.id}`}
+                  className={`block hover:underline ${
+                    activeSection === item.id ? "font-semibold" : ""
+                  }`}
+                >
+                  {item.title}
+                </Link>
+              ))}
+            </nav>
           </div>
         </aside>
       </div>
