@@ -5,24 +5,42 @@ import { ChevronDownIcon, HomeIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+const tocItems = [
+  { id: "section-1", title: "Section 1" },
+  { id: "section-2", title: "Section 2" },
+  { id: "section-3", title: "Section 3" },
+];
+
+const recentPosts = [
+  { id: "post-1", title: "Post 1" },
+  { id: "post-2", title: "Post 2" },
+  { id: "post-3", title: "Post 3" },
+  { id: "post-4", title: "Post 4" },
+  { id: "post-5", title: "Post 5" },
+];
+
 export default function BlogPost() {
   const [activeSection, setActiveSection] = useState("section-1");
   const [expanded, setExpanded] = useState<undefined | "postList" | "toc">();
 
   useEffect(() => {
+    const map: Record<string, boolean> = {};
     const observer = new IntersectionObserver(
       (entries) => {
-        const visibleSections = entries
-          .filter((entry) => entry.isIntersecting)
-          .map((entry) => entry.target.id);
+        entries.forEach((entry) => {
+          map[entry.target.id] = entry.isIntersecting;
+        });
 
-        if (visibleSections.length > 0) {
-          setActiveSection(visibleSections[0]);
+        const first = tocItems.findIndex(({ id }) => map[id]);
+        if (first !== -1) {
+          setActiveSection(tocItems[Math.max(first - 1, 0)].id);
+        } else {
+          setActiveSection(tocItems[tocItems.length - 1].id);
         }
       },
       {
         threshold: 0.1,
-        rootMargin: "-100px 0px -66%", // Ignore top 100px (header) and bottom 66%
+        rootMargin: "-100px 0px -30%",
       }
     );
 
@@ -31,7 +49,7 @@ export default function BlogPost() {
     });
 
     return () => observer.disconnect();
-  }, []);
+  }, [tocItems]);
 
   useEffect(() => {
     if (expanded) {
@@ -44,21 +62,6 @@ export default function BlogPost() {
       document.body.style.overflow = "unset";
     };
   }, [expanded]);
-
-  const tocItems = [
-    { id: "section-1", title: "Section 1" },
-    { id: "section-2", title: "Section 2" },
-    { id: "section-3", title: "Section 3" },
-  ];
-
-  const recentPosts = [
-    { id: "post-0", title: "Blog Post Title" },
-    { id: "post-1", title: "Post 1" },
-    { id: "post-2", title: "Post 2" },
-    { id: "post-3", title: "Post 3" },
-    { id: "post-4", title: "Post 4" },
-    { id: "post-5", title: "Post 5" },
-  ];
 
   const togglePostList = () => {
     setExpanded((expanded) =>
