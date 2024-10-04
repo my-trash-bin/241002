@@ -1,5 +1,7 @@
 "use client";
 
+import { ThemeSwitcher } from "@/components/theme-switcher";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
@@ -7,9 +9,11 @@ import {
   ChevronRightIcon,
   DotIcon,
   HomeIcon,
+  X,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 import Link from "next/link";
-import { KeyboardEvent, useEffect, useState } from "react";
+import { KeyboardEvent, ReactElement, useEffect, useState } from "react";
 
 interface Post {
   id: string;
@@ -20,6 +24,12 @@ interface Category {
   name: string;
   subCategories: Category[];
   posts: Post[];
+}
+
+interface Banner {
+  content: ReactElement;
+  backgroundColorOnDarkTheme: string;
+  backgroundColorOnLightTheme: string;
 }
 
 const tocItems = [
@@ -78,13 +88,23 @@ const categories: Category[] = [
   },
 ];
 
-const PostTree = ({
+const banners: Banner[] = [
+  {
+    content: (
+      <div className="text-white font-semibold">This content is important!</div>
+    ),
+    backgroundColorOnDarkTheme: "#440088",
+    backgroundColorOnLightTheme: "#440088",
+  },
+];
+
+function PostTree({
   category,
   isRoot,
 }: {
   category: Category;
   isRoot?: boolean;
-}) => {
+}) {
   const [isExpanded, setIsExpanded] = useState(isRoot);
 
   const toggleExpanded = () => setIsExpanded(!isExpanded);
@@ -94,11 +114,6 @@ const PostTree = ({
       event.preventDefault();
       toggleExpanded();
     }
-  };
-
-  const handleCategoryClick = () => {
-    // Here you can add logic to navigate to the category page
-    console.log(`Navigating to category: ${category.name}`);
   };
 
   return (
@@ -121,21 +136,12 @@ const PostTree = ({
               aria-hidden="true"
             />
           </div>
-          <div
+          <Link
+            href={`/categories/${category.name}`}
             className="ml-1 cursor-pointer flex-grow"
-            onClick={handleCategoryClick}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                handleCategoryClick();
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            aria-label={`Go to ${category.name} category`}
           >
             {category.name}
-          </div>
+          </Link>
         </div>
       )}
       {(isExpanded || isRoot) && (
@@ -161,11 +167,13 @@ const PostTree = ({
       )}
     </div>
   );
-};
+}
 
-export default function BlogPost() {
+export default function Page() {
   const [activeSection, setActiveSection] = useState("section-1");
   const [expanded, setExpanded] = useState<undefined | "postList" | "toc">();
+  const { theme } = useTheme();
+  const [visibleBanners, setVisibleBanners] = useState(banners);
 
   useEffect(() => {
     const map: Record<string, boolean> = {};
@@ -217,6 +225,10 @@ export default function BlogPost() {
     setExpanded((expanded) => (expanded === "toc" ? undefined : "toc"));
   };
 
+  const closeBanner = (index: number) => {
+    setVisibleBanners((prev) => prev.filter((_, i) => i !== index));
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Sticky Navigation Bar */}
@@ -230,9 +242,36 @@ export default function BlogPost() {
             <Link href="/about">About</Link>
             <Link href="/posts">Posts</Link>
             <Link href="/contact">Contact</Link>
+            <ThemeSwitcher />
           </nav>
         </div>
       </header>
+
+      {/* Banner */}
+      {visibleBanners.map((banner, index) => (
+        <div
+          key={index}
+          className="w-full py-2"
+          style={{
+            backgroundColor:
+              theme === "dark"
+                ? banner.backgroundColorOnDarkTheme
+                : banner.backgroundColorOnLightTheme,
+          }}
+        >
+          <div className="container mx-auto px-4 flex justify-between items-center">
+            {banner.content}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => closeBanner(index)}
+              aria-label="Close banner"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      ))}
 
       {/* Sticky Mobile and Tablet Post List and TOC Container */}
       <div
@@ -350,7 +389,7 @@ export default function BlogPost() {
         )}
       </div>
 
-      <div className="container mx-auto px-4 flex-1 items-start md:grid md:grid-cols-[220px_minmax(0,1fr)] md:gap-6 lg:grid-cols-[240px_minmax(0,1fr)_200px] lg:gap-10">
+      <div className="container mx-auto px-4 flex-1 items-start md:grid md:grid-cols-[280px_minmax(0,1fr)] md:gap-6 lg:grid-cols-[280px_minmax(0,1fr)_250px] lg:gap-10">
         {/* Sidebar for larger screens */}
         <aside className="hidden md:block sticky top-14 z-30 h-[calc(100vh-3.5rem)] w-full shrink-0 overflow-y-auto border-r">
           <div className="py-6 pr-6 lg:py-8">
