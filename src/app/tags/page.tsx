@@ -2,17 +2,22 @@
 
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
   ChevronDownIcon,
+  ChevronLeftIcon,
   ChevronRightIcon,
   DotIcon,
   HomeIcon,
+  MenuIcon,
+  RssIcon,
+  X,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
-import { KeyboardEvent, useEffect, useState } from "react";
+import { KeyboardEvent, ReactElement, useEffect, useState } from "react";
 
 interface Post {
   id: string;
@@ -35,6 +40,12 @@ interface TagData {
   parentTag?: string;
   childTags: string[];
   relatedTags: RelatedTag[];
+}
+
+interface Banner {
+  content: ReactElement;
+  backgroundColorOnDarkTheme: string;
+  backgroundColorOnLightTheme: string;
 }
 
 const tocItems = [
@@ -106,6 +117,18 @@ const tagData: TagData = {
     { similarity: 0.6, name: "Frontend" },
   ],
 };
+
+const banners: Banner[] = [
+  {
+    content: (
+      <div className="text-white font-semibold">
+        This tag is trending! Explore more React content.
+      </div>
+    ),
+    backgroundColorOnDarkTheme: "#440088",
+    backgroundColorOnLightTheme: "#440088",
+  },
+];
 
 function PostTree({
   category,
@@ -180,8 +203,11 @@ function PostTree({
 
 export default function TagPage() {
   const [activeSection, setActiveSection] = useState("parent-tag");
-  const [expanded, setExpanded] = useState<undefined | "postList">();
+  const [expanded, setExpanded] = useState<undefined | "postList" | "toc">();
+  const [leftAsideExpanded, setLeftAsideExpanded] = useState(true);
+  const [rightAsideExpanded, setRightAsideExpanded] = useState(true);
   const { theme } = useTheme();
+  const [visibleBanners, setVisibleBanners] = useState(banners);
 
   useEffect(() => {
     const map: Record<string, boolean> = {};
@@ -229,6 +255,22 @@ export default function TagPage() {
     );
   };
 
+  const toggleToc = () => {
+    setExpanded((expanded) => (expanded === "toc" ? undefined : "toc"));
+  };
+
+  const closeBanner = (index: number) => {
+    setVisibleBanners((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const toggleLeftAside = () => {
+    setLeftAsideExpanded(!leftAsideExpanded);
+  };
+
+  const toggleRightAside = () => {
+    setRightAsideExpanded(!rightAsideExpanded);
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Sticky Navigation Bar */}
@@ -246,6 +288,32 @@ export default function TagPage() {
           </nav>
         </div>
       </header>
+
+      {/* Banner */}
+      {visibleBanners.map((banner, index) => (
+        <div
+          key={index}
+          className="w-full py-2"
+          style={{
+            backgroundColor:
+              theme === "dark"
+                ? banner.backgroundColorOnDarkTheme
+                : banner.backgroundColorOnLightTheme,
+          }}
+        >
+          <div className="container mx-auto px-4 flex justify-between items-center">
+            {banner.content}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => closeBanner(index)}
+              aria-label="Close banner"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      ))}
 
       {/* Sticky Mobile and Tablet Post List and TOC Container */}
       <div
@@ -308,25 +376,59 @@ export default function TagPage() {
         )}
       </div>
 
-      <div className="container mx-auto px-4 flex-1 items-start md:grid md:grid-cols-[280px_minmax(0,1fr)] md:gap-6 lg:grid-cols-[280px_minmax(0,1fr)_250px] lg:gap-10">
-        {/* Sidebar for larger screens */}
-        <aside className="hidden md:block sticky top-14 z-30 h-[calc(100vh-3.5rem)] w-full shrink-0 overflow-y-auto border-r">
-          <div className="py-6 pr-6 lg:py-8">
-            <h2 className="mb-4 text-lg font-semibold">Posts</h2>
-            <Tabs defaultValue={categories[0].name}>
-              <TabsList>
+      <div className="container mx-auto px-4 flex-1 items-start md:grid md:grid-cols-[auto_minmax(0,1fr)] md:gap-6 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-10">
+        {/* Left Sidebar for larger screens */}
+        <aside
+          className={cn(
+            "hidden md:block sticky top-14 z-30 h-[calc(100vh-3.5rem)] shrink-0 transition-all duration-300",
+            leftAsideExpanded
+              ? "w-[280px] overflow-y-auto"
+              : "w-[40px] overflow-hidden"
+          )}
+        >
+          <div className="py-6 pr-6 lg:py-8 h-full flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h2
+                className={cn(
+                  "text-lg font-semibold",
+                  !leftAsideExpanded && "sr-only"
+                )}
+              >
+                Posts
+              </h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleLeftAside}
+                aria-label={
+                  leftAsideExpanded
+                    ? "Collapse left sidebar"
+                    : "Expand left sidebar"
+                }
+              >
+                {leftAsideExpanded ? (
+                  <ChevronLeftIcon className="h-4 w-4" />
+                ) : (
+                  <MenuIcon className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            {leftAsideExpanded && (
+              <Tabs defaultValue={categories[0].name} className="flex-grow">
+                <TabsList>
+                  {categories.map((category) => (
+                    <TabsTrigger key={category.name} value={category.name}>
+                      {category.name}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
                 {categories.map((category) => (
-                  <TabsTrigger key={category.name} value={category.name}>
-                    {category.name}
-                  </TabsTrigger>
+                  <TabsContent key={category.name} value={category.name}>
+                    <PostTree category={category} isRoot />
+                  </TabsContent>
                 ))}
-              </TabsList>
-              {categories.map((category) => (
-                <TabsContent key={category.name} value={category.name}>
-                  <PostTree category={category} isRoot />
-                </TabsContent>
-              ))}
-            </Tabs>
+              </Tabs>
+            )}
           </div>
         </aside>
 
@@ -403,6 +505,58 @@ export default function TagPage() {
             </div>
           </section>
         </main>
+
+        {/* Right Sidebar for larger screens */}
+        <aside
+          className={cn(
+            "hidden lg:block sticky top-14 self-start h-[calc(100vh-3.5rem)] transition-all duration-300",
+            rightAsideExpanded
+              ? "w-[250px] overflow-y-auto"
+              : "w-[40px] overflow-hidden"
+          )}
+        >
+          <div className="py-6 pl-6 h-full flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h2
+                className={cn(
+                  "text-lg font-semibold",
+                  !rightAsideExpanded && "sr-only"
+                )}
+              >
+                Tag Information
+              </h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleRightAside}
+                aria-label={
+                  rightAsideExpanded
+                    ? "Collapse right sidebar"
+                    : "Expand right sidebar"
+                }
+              >
+                {rightAsideExpanded ? (
+                  <ChevronRightIcon className="h-4 w-4" />
+                ) : (
+                  <MenuIcon className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            {rightAsideExpanded && (
+              <>
+                <nav className="space-y-2">
+                  <Link
+                    href={`/tags/${tagData.name}/rss`}
+                    className="flex items-center space-x-2 text-primary hover:underline"
+                  >
+                    <RssIcon className="h-4 w-4" />
+                    <span>RSS Feed</span>
+                  </Link>
+                </nav>
+              </>
+            )}
+          </div>
+        </aside>
       </div>
 
       {/* Footer */}

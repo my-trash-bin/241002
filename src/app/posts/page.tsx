@@ -6,9 +6,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
   ChevronDownIcon,
+  ChevronLeftIcon,
   ChevronRightIcon,
   DotIcon,
   HomeIcon,
+  MenuIcon,
   X,
 } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -172,6 +174,8 @@ function PostTree({
 export default function Page() {
   const [activeSection, setActiveSection] = useState("section-1");
   const [expanded, setExpanded] = useState<undefined | "postList" | "toc">();
+  const [leftAsideExpanded, setLeftAsideExpanded] = useState(true);
+  const [rightAsideExpanded, setRightAsideExpanded] = useState(true);
   const { theme } = useTheme();
   const [visibleBanners, setVisibleBanners] = useState(banners);
 
@@ -227,6 +231,14 @@ export default function Page() {
 
   const closeBanner = (index: number) => {
     setVisibleBanners((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const toggleLeftAside = () => {
+    setLeftAsideExpanded(!leftAsideExpanded);
+  };
+
+  const toggleRightAside = () => {
+    setRightAsideExpanded(!rightAsideExpanded);
   };
 
   return (
@@ -389,25 +401,59 @@ export default function Page() {
         )}
       </div>
 
-      <div className="container mx-auto px-4 flex-1 items-start md:grid md:grid-cols-[280px_minmax(0,1fr)] md:gap-6 lg:grid-cols-[280px_minmax(0,1fr)_250px] lg:gap-10">
-        {/* Sidebar for larger screens */}
-        <aside className="hidden md:block sticky top-14 z-30 h-[calc(100vh-3.5rem)] w-full shrink-0 overflow-y-auto border-r">
-          <div className="py-6 pr-6 lg:py-8">
-            <h2 className="mb-4 text-lg font-semibold">Posts</h2>
-            <Tabs defaultValue={categories[0].name}>
-              <TabsList>
+      <div className="container mx-auto px-4 flex-1 items-start md:grid md:grid-cols-[auto_minmax(0,1fr)] md:gap-6 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-10">
+        {/* Left Sidebar for larger screens */}
+        <aside
+          className={cn(
+            "hidden md:block sticky top-14 z-30 h-[calc(100vh-3.5rem)] shrink-0 transition-all duration-300",
+            leftAsideExpanded
+              ? "w-[280px] overflow-y-auto"
+              : "w-[40px] overflow-hidden"
+          )}
+        >
+          <div className="py-6 pr-6 lg:py-8 h-full flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h2
+                className={cn(
+                  "text-lg font-semibold",
+                  !leftAsideExpanded && "sr-only"
+                )}
+              >
+                Posts
+              </h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleLeftAside}
+                aria-label={
+                  leftAsideExpanded
+                    ? "Collapse left sidebar"
+                    : "Expand left sidebar"
+                }
+              >
+                {leftAsideExpanded ? (
+                  <ChevronLeftIcon className="h-4 w-4" />
+                ) : (
+                  <MenuIcon className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            {leftAsideExpanded && (
+              <Tabs defaultValue={categories[0].name} className="flex-grow">
+                <TabsList>
+                  {categories.map((category) => (
+                    <TabsTrigger key={category.name} value={category.name}>
+                      {category.name}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
                 {categories.map((category) => (
-                  <TabsTrigger key={category.name} value={category.name}>
-                    {category.name}
-                  </TabsTrigger>
+                  <TabsContent key={category.name} value={category.name}>
+                    <PostTree category={category} isRoot />
+                  </TabsContent>
                 ))}
-              </TabsList>
-              {categories.map((category) => (
-                <TabsContent key={category.name} value={category.name}>
-                  <PostTree category={category} isRoot />
-                </TabsContent>
-              ))}
-            </Tabs>
+              </Tabs>
+            )}
           </div>
         </aside>
 
@@ -467,23 +513,57 @@ export default function Page() {
           </section>
         </main>
 
-        {/* Table of Contents for larger screens */}
-        <aside className="hidden lg:block sticky top-14 self-start h-[calc(100vh-3.5rem)] overflow-y-auto">
-          <div className="py-6 pl-6">
-            <h2 className="mb-4 text-lg font-semibold">Table of Contents</h2>
-            <nav className="space-y-2">
-              {tocItems.map((item) => (
-                <Link
-                  key={item.id}
-                  href={`#${item.id}`}
-                  className={`block hover:underline ${
-                    activeSection === item.id ? "font-semibold" : ""
-                  }`}
-                >
-                  {item.title}
-                </Link>
-              ))}
-            </nav>
+        {/* Right Sidebar for larger screens */}
+        <aside
+          className={cn(
+            "hidden lg:block sticky top-14 self-start h-[calc(100vh-3.5rem)] transition-all duration-300",
+            rightAsideExpanded
+              ? "w-[250px] overflow-y-auto"
+              : "w-[40px] overflow-hidden"
+          )}
+        >
+          <div className="py-6 pl-6 h-full flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h2
+                className={cn(
+                  "text-lg font-semibold",
+                  !rightAsideExpanded && "sr-only"
+                )}
+              >
+                Table of Contents
+              </h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleRightAside}
+                aria-label={
+                  rightAsideExpanded
+                    ? "Collapse right sidebar"
+                    : "Expand right sidebar"
+                }
+              >
+                {rightAsideExpanded ? (
+                  <ChevronRightIcon className="h-4 w-4" />
+                ) : (
+                  <MenuIcon className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            {rightAsideExpanded && (
+              <nav className="space-y-2">
+                {tocItems.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={`#${item.id}`}
+                    className={`block hover:underline ${
+                      activeSection === item.id ? "font-semibold" : ""
+                    }`}
+                  >
+                    {item.title}
+                  </Link>
+                ))}
+              </nav>
+            )}
           </div>
         </aside>
       </div>
