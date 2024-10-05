@@ -10,17 +10,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
   ArrowRightIcon,
   BookOpenIcon,
   HomeIcon,
-  MailIcon,
+  RssIcon,
   TagIcon,
   TrendingUpIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 
 interface Post {
   id: string;
@@ -88,15 +86,6 @@ const trendingTags = [
 ];
 
 export default function MainPage() {
-  const [email, setEmail] = useState("");
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle newsletter signup logic here
-    console.log("Signed up with email:", email);
-    setEmail("");
-  };
-
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
@@ -184,26 +173,24 @@ export default function MainPage() {
           </div>
         </section>
 
-        {/* Newsletter Signup */}
+        {/* RSS */}
         <section className="mb-12 bg-muted p-8 rounded-lg">
           <h2 className="text-3xl font-bold mb-4 flex items-center">
-            <MailIcon className="mr-2 h-8 w-8" />
-            Subscribe to Our Newsletter
+            <RssIcon className="mr-2 h-8 w-8" />
+            Stay Updated with Our RSS Feed
           </h2>
           <p className="mb-4">
-            Stay up-to-date with our latest articles and tech news.
+            Get instant updates on our latest articles and tech news directly in
+            your favorite RSS reader.
           </p>
-          <form onSubmit={handleSubmit} className="flex gap-4">
-            <Input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="flex-grow"
-            />
-            <Button type="submit">Subscribe</Button>
-          </form>
+          <div className="flex items-center gap-4">
+            <Button asChild>
+              <Link href="/rss.xml" className="flex items-center">
+                <RssIcon className="mr-2 h-4 w-4" />
+                Subscribe to RSS Feed
+              </Link>
+            </Button>
+          </div>
         </section>
 
         {/* Trending Tags */}
