@@ -3,6 +3,13 @@
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
@@ -22,6 +29,8 @@ import { KeyboardEvent, ReactElement, useEffect, useState } from "react";
 interface Post {
   id: string;
   title: string;
+  excerpt: string;
+  date: string;
 }
 
 interface Category {
@@ -40,6 +49,7 @@ interface TagData {
   parentTag?: string;
   childTags: string[];
   relatedTags: RelatedTag[];
+  posts: Post[];
 }
 
 interface Banner {
@@ -48,13 +58,6 @@ interface Banner {
   backgroundColorOnLightTheme: string;
 }
 
-const tocItems = [
-  { id: "parent-tag", title: "Parent Tag" },
-  { id: "child-tags", title: "Child Tags" },
-  { id: "related-tags", title: "Related Tags" },
-  { id: "comments", title: "Comments" },
-];
-
 const categories: Category[] = [
   {
     name: "Default",
@@ -62,7 +65,14 @@ const categories: Category[] = [
       {
         name: "programming",
         subCategories: [],
-        posts: [{ id: "programming-post-1", title: "Programming" }],
+        posts: [
+          {
+            id: "programming-post-1",
+            title: "Programming",
+            excerpt: "A post about programming",
+            date: "2023-06-01",
+          },
+        ],
       },
       {
         name: "AI",
@@ -70,32 +80,111 @@ const categories: Category[] = [
           {
             name: "deeper one",
             subCategories: [],
-            posts: [{ id: "deep-post-1", title: "Deep" }],
+            posts: [
+              {
+                id: "deep-post-1",
+                title: "Deep",
+                excerpt: "A post about deep learning",
+                date: "2023-06-02",
+              },
+            ],
           },
         ],
-        posts: [{ id: "ai-post-1", title: "AI" }],
+        posts: [
+          {
+            id: "ai-post-1",
+            title: "AI",
+            excerpt: "A post about artificial intelligence",
+            date: "2023-06-03",
+          },
+        ],
       },
     ],
     posts: [
-      { id: "post-1", title: "Root Post 1" },
-      { id: "post-2", title: "Root Post 2" },
-      { id: "post-3", title: "Root Post 3" },
-      { id: "post-4", title: "Root Post 4" },
-      { id: "post-5", title: "Root Post 5" },
+      {
+        id: "post-1",
+        title: "Root Post 1",
+        excerpt: "First root post",
+        date: "2023-06-04",
+      },
+      {
+        id: "post-2",
+        title: "Root Post 2",
+        excerpt: "Second root post",
+        date: "2023-06-05",
+      },
+      {
+        id: "post-3",
+        title: "Root Post 3",
+        excerpt: "Third root post",
+        date: "2023-06-06",
+      },
+      {
+        id: "post-4",
+        title: "Root Post 4",
+        excerpt: "Fourth root post",
+        date: "2023-06-07",
+      },
+      {
+        id: "post-5",
+        title: "Root Post 5",
+        excerpt: "Fifth root post",
+        date: "2023-06-08",
+      },
     ],
   },
   {
     name: "Date",
     subCategories: [],
     posts: [
-      { id: "post-1", title: "Root Post 1" },
-      { id: "post-2", title: "Root Post 2" },
-      { id: "post-3", title: "Root Post 3" },
-      { id: "post-4", title: "Root Post 4" },
-      { id: "post-5", title: "Root Post 5" },
-      { id: "programming-post-1", title: "Programming" },
-      { id: "ai-post-1", title: "AI" },
-      { id: "deep-post-1", title: "Deep" },
+      {
+        id: "post-1",
+        title: "Root Post 1",
+        excerpt: "First root post",
+        date: "2023-06-04",
+      },
+      {
+        id: "post-2",
+        title: "Root Post 2",
+        excerpt: "Second root post",
+        date: "2023-06-05",
+      },
+      {
+        id: "post-3",
+        title: "Root Post 3",
+        excerpt: "Third root post",
+        date: "2023-06-06",
+      },
+      {
+        id: "post-4",
+        title: "Root Post 4",
+        excerpt: "Fourth root post",
+        date: "2023-06-07",
+      },
+      {
+        id: "post-5",
+        title: "Root Post 5",
+        excerpt: "Fifth root post",
+        date: "2023-06-08",
+      },
+      {
+        id: "programming-post-1",
+        title: "Programming",
+        excerpt: "A post about programming",
+        date: "2023-06-01",
+      },
+      {
+        id: "ai-post-1",
+        title: "AI",
+        excerpt: "A post about artificial intelligence",
+        date: "2023-06-03",
+      },
+      {
+        id: "deep-post-1",
+        title: "Deep",
+        excerpt: "A post about deep learning",
+        date: "2023-06-02",
+      },
     ],
   },
   {
@@ -115,6 +204,32 @@ const tagData: TagData = {
     { similarity: 0.8, name: "Angular" },
     { similarity: 0.7, name: "Svelte" },
     { similarity: 0.6, name: "Frontend" },
+  ],
+  posts: [
+    {
+      id: "react-post-1",
+      title: "Introduction to React",
+      excerpt: "Learn the basics of React",
+      date: "2023-06-01",
+    },
+    {
+      id: "react-post-2",
+      title: "Advanced React Patterns",
+      excerpt: "Explore advanced React patterns",
+      date: "2023-06-02",
+    },
+    {
+      id: "react-post-3",
+      title: "React Performance Optimization",
+      excerpt: "Tips for optimizing React apps",
+      date: "2023-06-03",
+    },
+    {
+      id: "react-post-4",
+      title: "React Hooks in Depth",
+      excerpt: "Deep dive into React Hooks",
+      date: "2023-06-04",
+    },
   ],
 };
 
@@ -202,40 +317,13 @@ function PostTree({
 }
 
 export default function TagPage() {
-  const [activeSection, setActiveSection] = useState("parent-tag");
-  const [expanded, setExpanded] = useState<undefined | "postList" | "toc">();
+  const [expanded, setExpanded] = useState<
+    undefined | "postList" | "tag-information"
+  >();
   const [leftAsideExpanded, setLeftAsideExpanded] = useState(true);
   const [rightAsideExpanded, setRightAsideExpanded] = useState(true);
   const { theme } = useTheme();
   const [visibleBanners, setVisibleBanners] = useState(banners);
-
-  useEffect(() => {
-    const map: Record<string, boolean> = {};
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          map[entry.target.id] = entry.isIntersecting;
-        });
-
-        const first = tocItems.findIndex(({ id }) => map[id]);
-        if (first !== -1) {
-          setActiveSection(tocItems[Math.max(first - 1, 0)].id);
-        } else {
-          setActiveSection(tocItems[tocItems.length - 1].id);
-        }
-      },
-      {
-        threshold: 0.1,
-        rootMargin: "-100px 0px -30%",
-      }
-    );
-
-    document.querySelectorAll("h2[id]").forEach((section) => {
-      observer.observe(section);
-    });
-
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     if (expanded) {
@@ -255,8 +343,10 @@ export default function TagPage() {
     );
   };
 
-  const toggleToc = () => {
-    setExpanded((expanded) => (expanded === "toc" ? undefined : "toc"));
+  const toggleTagInformation = () => {
+    setExpanded((expanded) =>
+      expanded === "tag-information" ? undefined : "tag-information"
+    );
   };
 
   const closeBanner = (index: number) => {
@@ -374,6 +464,88 @@ export default function TagPage() {
             </div>
           </div>
         )}
+
+        {/* Mobile and Tablet Tag Information collapsed */}
+        <div className="border-b h-10">
+          <div className="container mx-auto px-4">
+            <div
+              className="py-2 flex items-center justify-between cursor-pointer"
+              onClick={toggleTagInformation}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  toggleTagInformation();
+                }
+              }}
+              aria-expanded={expanded === "tag-information"}
+              aria-controls="mobile-tag-information"
+            >
+              <span className="font-medium">Tag Information</span>
+              <ChevronDownIcon
+                className={`h-4 w-4 transition-transform ${
+                  expanded === "tag-information" ? "transform rotate-180" : ""
+                }`}
+                aria-hidden="true"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile and Tablet Tag Information expanded */}
+        {expanded === "tag-information" && (
+          <div
+            id="mobile-tag-information"
+            className="lg:hidden flex-1 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 overflow-y-auto"
+          >
+            <div className="container mx-auto px-4 py-4">
+              <nav className="space-y-2">
+                <Link
+                  href={`/tags/${tagData.name}/rss`}
+                  className="flex items-center space-x-2 text-primary hover:underline"
+                >
+                  <RssIcon className="h-4 w-4" />
+                  <span>RSS Feed</span>
+                </Link>
+                {tagData.parentTag && (
+                  <Link
+                    href={`/tags/${tagData.parentTag}`}
+                    className="block hover:underline"
+                  >
+                    {tagData.parentTag}
+                  </Link>
+                )}
+              </nav>
+              <h3 className="mt-6 mb-2 text-md font-semibold">Child Tags</h3>
+              <nav>
+                {tagData.childTags.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {tagData.childTags.map((tag) => (
+                      <Link key={tag} href={`/tags/${tag}`}>
+                        <Badge variant="secondary">{tag}</Badge>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <p>This tag has no child tags.</p>
+                )}
+              </nav>
+              <h3 className="mt-6 mb-2 text-md font-semibold">Related Tags</h3>
+              <nav className="space-y-2">
+                {tagData.relatedTags.map((tag) => (
+                  <Link
+                    key={tag.name}
+                    href={`/tags/${tag.name}`}
+                    className="block hover:underline"
+                  >
+                    {tag.name}
+                  </Link>
+                ))}
+              </nav>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="container mx-auto px-4 flex-1 items-start md:grid md:grid-cols-[auto_minmax(0,1fr)] md:gap-6 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-10">
@@ -437,45 +609,24 @@ export default function TagPage() {
           <article className="prose dark:prose-invert max-w-none">
             <h1 className="text-3xl font-bold mb-4">Tag: {tagData.name}</h1>
 
-            <h2 id="parent-tag" className="text-2xl font-semibold mt-6 mb-4">
-              Parent Tag
+            <h2 id="posts" className="text-2xl font-semibold mt-6 mb-4">
+              Posts
             </h2>
-            {tagData.parentTag ? (
-              <Link
-                href={`/tags/${tagData.parentTag}`}
-                className="text-primary hover:underline"
-              >
-                {tagData.parentTag}
-              </Link>
-            ) : (
-              <p>This tag has no parent tag.</p>
-            )}
-
-            <h2 id="child-tags" className="text-2xl font-semibold mt-6 mb-4">
-              Child Tags
-            </h2>
-            {tagData.childTags.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {tagData.childTags.map((tag) => (
-                  <Link key={tag} href={`/tags/${tag}`}>
-                    <Badge variant="secondary">{tag}</Badge>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <p>This tag has no child tags.</p>
-            )}
-
-            <h2 id="related-tags" className="text-2xl font-semibold mt-6 mb-4">
-              Related Tags
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {tagData.relatedTags.map((tag) => (
-                <Link key={tag.name} href={`/tags/${tag.name}`}>
-                  <Badge variant="outline">
-                    {tag.name} ({(tag.similarity * 100).toFixed(0)}%)
-                  </Badge>
-                </Link>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              {tagData.posts.map((post) => (
+                <Card key={post.id}>
+                  <CardHeader>
+                    <CardTitle>{post.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p>{post.excerpt}</p>
+                  </CardContent>
+                  <CardFooter className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      {post.date}
+                    </span>
+                  </CardFooter>
+                </Card>
               ))}
             </div>
           </article>
@@ -552,6 +703,42 @@ export default function TagPage() {
                     <RssIcon className="h-4 w-4" />
                     <span>RSS Feed</span>
                   </Link>
+                  {tagData.parentTag && (
+                    <Link
+                      href={`/tags/${tagData.parentTag}`}
+                      className="block hover:underline"
+                    >
+                      {tagData.parentTag}
+                    </Link>
+                  )}
+                </nav>
+                <h3 className="mt-6 mb-2 text-md font-semibold">Child Tags</h3>
+                <nav>
+                  {tagData.childTags.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {tagData.childTags.map((tag) => (
+                        <Link key={tag} href={`/tags/${tag}`}>
+                          <Badge variant="secondary">{tag}</Badge>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <p>This tag has no child tags.</p>
+                  )}
+                </nav>
+                <h3 className="mt-6 mb-2 text-md font-semibold">
+                  Related Tags
+                </h3>
+                <nav className="space-y-2">
+                  {tagData.relatedTags.map((tag) => (
+                    <Link
+                      key={tag.name}
+                      href={`/tags/${tag.name}`}
+                      className="block hover:underline"
+                    >
+                      {tag.name}
+                    </Link>
+                  ))}
                 </nav>
               </>
             )}
